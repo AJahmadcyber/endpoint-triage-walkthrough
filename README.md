@@ -203,7 +203,7 @@ The techniques and scripts in this repository are intended for **defensive purpo
 [![GitHub](https://img.shields.io/badge/GitHub-AJahmadcyber-181717?style=flat-square&logo=github)](https://github.com/AJahmadcyber)
 [![Email](https://img.shields.io/badge/Email-Contact-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ahmad.j.abuzarqa@gmail.com)
 
-**Currently pursuing:** CompTIA Security+ | CyberDefenders CCDL1
+**Currently pursuing:**  CyberDefenders CCDL1
 **Focus areas:** SOC operations, threat detection, incident response, detection engineering
 
 ---
