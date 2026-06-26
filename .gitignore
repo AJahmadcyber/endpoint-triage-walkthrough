@@ -1,0 +1,27 @@
+﻿# Windows system files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS files (احتياط)
+.DS_Store
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# Personal/sensitive files
+*.local
+*-private.*
+credentials.txt
+.env
+
+# PowerShell transcripts
+*.transcript
