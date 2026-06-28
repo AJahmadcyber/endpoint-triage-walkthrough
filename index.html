@@ -870,6 +870,309 @@
                 gradient-shift 5s ease infinite;
         }
 
+    
+        /* ========================================
+           CYBERPUNK MODE - HORROR/HACKER EFFECTS
+        ======================================== */
+
+        /* === HERO TITLE: GLITCH + CHROMATIC ABERRATION === */
+        h1.hero-title {
+            position: relative;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            line-height: 0.9;
+            color: #fff;
+            background: none;
+            -webkit-text-fill-color: #fff;
+            animation: 
+                hero-flicker 8s infinite,
+                hero-scan 4s linear infinite;
+        }
+
+        h1.hero-title::before,
+        h1.hero-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: #fff;
+        }
+
+        h1.hero-title::before {
+            animation: glitch-1 2s infinite linear alternate-reverse;
+            color: #ff003c;
+            z-index: -1;
+            text-shadow: 
+                0 0 5px #ff003c,
+                0 0 10px #ff003c;
+        }
+
+        h1.hero-title::after {
+            animation: glitch-2 3s infinite linear alternate-reverse;
+            color: #00f0ff;
+            z-index: -2;
+            text-shadow: 
+                0 0 5px #00f0ff,
+                0 0 10px #00f0ff;
+        }
+
+        @keyframes glitch-1 {
+            0%, 100% { clip-path: inset(0 0 95% 0); transform: translate(0); }
+            10% { clip-path: inset(30% 0 60% 0); transform: translate(-3px, 1px); }
+            20% { clip-path: inset(75% 0 10% 0); transform: translate(3px, -1px); }
+            30% { clip-path: inset(15% 0 70% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(60% 0 30% 0); transform: translate(2px, 0); }
+            50% { clip-path: inset(40% 0 50% 0); transform: translate(-3px, -2px); }
+            60% { clip-path: inset(85% 0 5% 0); transform: translate(3px, 1px); }
+            70% { clip-path: inset(20% 0 75% 0); transform: translate(-2px, 2px); }
+            80% { clip-path: inset(50% 0 40% 0); transform: translate(1px, -1px); }
+            90% { clip-path: inset(70% 0 20% 0); transform: translate(-1px, 2px); }
+        }
+
+        @keyframes glitch-2 {
+            0%, 100% { clip-path: inset(95% 0 0 0); transform: translate(0); }
+            10% { clip-path: inset(50% 0 30% 0); transform: translate(3px, -1px); }
+            20% { clip-path: inset(15% 0 80% 0); transform: translate(-3px, 1px); }
+            30% { clip-path: inset(70% 0 15% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 0); }
+            50% { clip-path: inset(80% 0 10% 0); transform: translate(3px, 2px); }
+            60% { clip-path: inset(20% 0 70% 0); transform: translate(-3px, -1px); }
+            70% { clip-path: inset(60% 0 30% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(45% 0 45% 0); transform: translate(-1px, 1px); }
+            90% { clip-path: inset(85% 0 5% 0); transform: translate(1px, -2px); }
+        }
+
+        @keyframes hero-flicker {
+            0%, 100% { opacity: 1; }
+            5% { opacity: 0.8; }
+            5.5% { opacity: 1; }
+            10% { opacity: 0.95; }
+            10.5% { opacity: 1; }
+            50% { opacity: 1; }
+            55% { opacity: 0.6; text-shadow: 2px 0 #ff003c, -2px 0 #00f0ff; }
+            55.5% { opacity: 1; text-shadow: none; }
+            90% { opacity: 1; }
+            92% { opacity: 0.7; }
+            92.5% { opacity: 1; }
+        }
+
+        @keyframes hero-scan {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 30px rgba(6, 182, 212, 0.5),
+                    0 0 60px rgba(59, 130, 246, 0.3);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 50px rgba(139, 92, 246, 0.7),
+                    0 0 100px rgba(6, 182, 212, 0.5),
+                    2px 0 0 #ff003c,
+                    -2px 0 0 #00f0ff;
+            }
+        }
+
+        /* Hover - FULL MALFUNCTION */
+        h1.hero-title:hover {
+            animation: 
+                hero-flicker 0.3s infinite,
+                hero-malfunction 0.3s infinite;
+        }
+
+        @keyframes hero-malfunction {
+            0%, 100% { transform: translate(0); filter: hue-rotate(0deg); }
+            10% { transform: translate(-5px, 2px) skewX(2deg); filter: hue-rotate(20deg); }
+            20% { transform: translate(5px, -2px) skewX(-2deg); filter: hue-rotate(-20deg); }
+            30% { transform: translate(-3px, 3px); filter: hue-rotate(50deg); }
+            40% { transform: translate(3px, -3px); filter: hue-rotate(-50deg); }
+            50% { transform: translate(-2px, 2px) skewX(3deg); }
+            60% { transform: translate(2px, -2px) skewX(-3deg); }
+        }
+
+        /* === SCAN LINES OVERLAY (CRT EFFECT) === */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0) 2px,
+                rgba(0, 0, 0, 0.15) 3px,
+                rgba(0, 0, 0, 0) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            animation: scan-move 8s linear infinite;
+        }
+
+        @keyframes scan-move {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* === VIGNETTE === */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.7) 100%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* === SECTION TITLES: TERMINAL DECRYPT === */
+        .section-title {
+            position: relative;
+            font-family: 'JetBrains Mono', monospace !important;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent-cyan);
+            background: none !important;
+            -webkit-text-fill-color: var(--accent-cyan) !important;
+            text-shadow: 
+                0 0 10px var(--accent-cyan),
+                0 0 20px var(--accent-cyan),
+                0 0 40px rgba(6, 182, 212, 0.5);
+            animation: title-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes title-glow {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px var(--accent-cyan),
+                    0 0 20px var(--accent-cyan),
+                    0 0 40px rgba(6, 182, 212, 0.5);
+            }
+            50% {
+                text-shadow: 
+                    0 0 15px var(--accent-cyan),
+                    0 0 30px var(--accent-cyan),
+                    0 0 60px rgba(139, 92, 246, 0.7),
+                    0 0 80px rgba(6, 182, 212, 0.5);
+            }
+        }
+
+        .section-title::before {
+            content: '> ';
+            color: var(--accent-green);
+            text-shadow: 0 0 10px var(--accent-green);
+            animation: prompt-blink 1s step-end infinite;
+        }
+
+        .section-title::after {
+            content: ' _';
+            color: var(--accent-cyan);
+            animation: prompt-blink 1s step-end infinite;
+        }
+
+        @keyframes prompt-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Section title hover - glitch */
+        .section-title:hover {
+            animation: 
+                title-glow 2s ease-in-out infinite,
+                section-glitch 0.3s infinite;
+        }
+
+        @keyframes section-glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 1px); color: #ff003c; }
+            40% { transform: translate(2px, -1px); color: #00f0ff; }
+            60% { transform: translate(-1px, 2px); color: var(--accent-purple); }
+            80% { transform: translate(1px, -2px); color: var(--accent-cyan); }
+        }
+
+        /* === RANDOM STATIC FLASH === */
+        @keyframes static-flash {
+            0%, 96%, 100% { opacity: 0; }
+            97% { opacity: 0.3; }
+            98% { opacity: 0; }
+            99% { opacity: 0.2; }
+        }
+
+        .static-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(255, 0, 60, 0.03) 0px,
+                    rgba(0, 240, 255, 0.03) 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 9997;
+            animation: static-flash 12s infinite;
+        }
+
+        /* === HERO BADGE ENHANCEMENT === */
+        .hero-badge {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px var(--accent-cyan);
+            box-shadow: 
+                0 0 20px rgba(6, 182, 212, 0.3),
+                inset 0 0 20px rgba(6, 182, 212, 0.1);
+            animation: 
+                fadeInDown 1s ease,
+                badge-pulse 2s ease infinite;
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% {
+                box-shadow: 
+                    0 0 20px rgba(6, 182, 212, 0.3),
+                    inset 0 0 20px rgba(6, 182, 212, 0.1);
+            }
+            50% {
+                box-shadow: 
+                    0 0 40px rgba(6, 182, 212, 0.8),
+                    inset 0 0 30px rgba(6, 182, 212, 0.3);
+            }
+        }
+
+        /* === HERO SUBTITLE === */
+        .hero-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary) !important;
+            -webkit-text-fill-color: var(--text-secondary) !important;
+            background: none !important;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+            border-left: 2px solid var(--accent-cyan);
+            padding-left: 20px;
+            text-align: left;
+            display: inline-block;
+        }
+
+        /* Card hover enhancements */
+        .stat-card:hover,
+        .feature-card:hover,
+        .mitre-card:hover {
+            box-shadow: 
+                0 10px 40px rgba(6, 182, 212, 0.4),
+                0 0 60px rgba(139, 92, 246, 0.2),
+                inset 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
     </style>
 </head>
 <body>
@@ -894,7 +1197,7 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badge">CASE STUDY  PRODUCTION READY</div>
-            <h1 class="hero-title"><span class="typing-container"><span class="typing-text">Endpoint Triage Walkthrough</span></span></h1>
+            <h1 class="hero-title" data-text="Endpoint Triage Walkthrough">Endpoint Triage Walkthrough</h1>
             <p class="hero-subtitle">A real-world PUP incident response case study following the PICERL framework, with PowerShell triage automation, Sigma detection rules, and complete MITRE ATT&CK mapping.</p>
             <div class="hero-tags">
                 <div class="hero-tag">PowerShell</div>
@@ -1120,6 +1423,8 @@
         <p style="margin-top: 10px;">MIT License  Built for educational purposes</p>
     </footer>
 
+    <div class="static-overlay"></div>
+    
     <script>
         // Cursor Glow Effect
         const cursorGlow = document.getElementById("cursor-glow");
