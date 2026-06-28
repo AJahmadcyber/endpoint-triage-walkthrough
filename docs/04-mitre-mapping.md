@@ -167,6 +167,70 @@ This is what makes PUPs hard to detect with signature-based approaches and why *
 
 ---
 
+
+---
+
+##  Attack Chain Visualization
+
+The MITRE ATT&CK techniques observed in this case form a coherent attack chain. While this PUP is legitimate software, the same chain is observed in real adversary campaigns:
+
+```mermaid
+flowchart TB
+    Start([ Initial Installation])
+    
+    Start --> T1[T1543.003<br/>Create Windows Service]
+    T1 --> T2[T1547.001<br/>Registry Run Keys]
+    
+    T1 --> Persist{Persistence<br/>Achieved}
+    T2 --> Persist
+    
+    Persist --> T3[T1071.004<br/>DNS Traffic Interception]
+    Persist --> T4[T1562.001<br/>Impair Defender]
+    
+    T3 --> Impact1[ Traffic Visibility]
+    T4 --> Impact2[ Defense Evasion]
+    
+    Impact1 --> Goal([ Persistent Foothold<br/>with Network Visibility])
+    Impact2 --> Goal
+    
+    style Start fill:#27ae60,color:#fff
+    style T1 fill:#e74c3c,color:#fff
+    style T2 fill:#e74c3c,color:#fff
+    style T3 fill:#f39c12,color:#fff
+    style T4 fill:#9b59b6,color:#fff
+    style Persist fill:#1f6feb,color:#fff
+    style Goal fill:#c0392b,color:#fff
+    style Impact1 fill:#34495e,color:#fff
+    style Impact2 fill:#34495e,color:#fff
+```
+
+### Reading the Chain
+
+This visualization shows the **tactical progression**:
+
+1. ** Initial Installation**  The PUP enters the system (often bundled with freeware)
+2. ** Persistence Layer**  Services and Registry keys ensure survival across reboots
+3. ** Operational Capabilities**  DNS interception enables traffic visibility
+4. ** Defense Evasion**  Defender manipulation prevents detection
+5. ** Final State**  Persistent foothold with broad system access
+
+### Why This Matters
+
+The same attack pattern is observed in:
+
+| Threat Actor / Family | Chain Similarity                                |
+|----------------------|--------------------------------------------------|
+| TrickBot             | Service persistence + traffic interception      |
+| Emotet               | Multi-service deployment + Defender bypass       |
+| Ryuk Ransomware      | Persistence + WSC manipulation before encryption |
+| APT29 (Cozy Bear)    | DNS-based C2 with persistence                    |
+
+**The behaviors don't change. Only the labels do.**
+
+This is the core insight of behavioral threat detection  and why mapping legitimate software like ReasonLabs to MITRE ATT&CK is a valuable training exercise.
+
+---
+
 ## Sigma Rule Example
 
 A detection rule based on this case study:

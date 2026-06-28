@@ -78,6 +78,64 @@ Each service had a specific function. Mapping them revealed the scope of system 
 
 ---
 
+
+---
+
+##  ReasonLabs Service Architecture
+
+The 8-service deployment forms a complex multi-component PUP suite. The diagram below illustrates how these services interact with the Windows operating system:
+
+```mermaid
+graph TB
+    Win[Windows OS - SYSTEM Privileges]
+    
+    Win --> Core[Core Components]
+    Win --> Net[Network Layer]
+    Win --> Sec[Security Layer]
+    Win --> Sync[Telemetry]
+    
+    Core --> ENG[rsEngineSvc<br/>Core Engine<br/>44,392s CPU]
+    Core --> CLI[rsClientSvc<br/>Client Agent]
+    Core --> EDR[rsEDRSvc<br/>EDR Module]
+    
+    Net --> DNS1[rsDNSResolver<br/>DNS Interception]
+    Net --> DNS2[rsDNSSvc<br/>DNS Service]
+    Net --> VPN[rsVPNSvc<br/>VPN Client]
+    
+    Sec --> WSC[rsWSC<br/>WSC Manipulation]
+    
+    Sync --> SYN[rsSyncSvc<br/>Telemetry Sync]
+    
+    DNS1 -.intercepts.-> Internet((Internet Traffic))
+    DNS2 -.intercepts.-> Internet
+    SYN -.beacons.-> External((ReasonLabs Servers))
+    WSC -.modifies.-> Defender{Windows Defender}
+    
+    style Win fill:#1f6feb,color:#fff
+    style ENG fill:#e74c3c,color:#fff
+    style WSC fill:#f39c12,color:#fff
+    style DNS1 fill:#8e44ad,color:#fff
+    style DNS2 fill:#8e44ad,color:#fff
+    style Defender fill:#27ae60,color:#fff
+    style Internet fill:#3498db,color:#fff
+    style External fill:#c0392b,color:#fff
+```
+
+**Key observations from this architecture:**
+
+-  **`rsEngineSvc`** consumed the bulk of CPU resources (the original outlier)
+-  **`rsWSC`** had direct access to modify Windows Defender's reporting
+-  **DNS services** intercepted all outbound DNS queries (potential traffic visibility)
+-  **`rsSyncSvc`** beaconed externally to vendor infrastructure
+- All services ran with **LocalSystem** privileges (highest level)
+
+This multi-layered architecture is characteristic of full security suites  but also of sophisticated malware. The same techniques are observed in:
+- TrickBot's multi-component deployment
+- Emotet's modular architecture
+- Various ransomware families with persistence and defense evasion modules
+
+---
+
 ## Step 3: Persistence Audit
 
 The next question was how this suite survives reboots. A multi-layer registry audit was conducted:

@@ -18,6 +18,32 @@ These symptoms suggested a runaway background process, but Task Manager did not 
 
 ---
 
+
+---
+
+##  PICERL Framework Visualization
+
+```mermaid
+flowchart LR
+    A[ Preparation] --> B[ Identification]
+    B --> C[ Containment]
+    C --> D[ Eradication]
+    D --> E[ Recovery]
+    E --> F[ Lessons Learned]
+    F -.feedback loop.-> A
+    
+    style A fill:#3498db,color:#fff
+    style B fill:#e74c3c,color:#fff
+    style C fill:#f39c12,color:#fff
+    style D fill:#27ae60,color:#fff
+    style E fill:#9b59b6,color:#fff
+    style F fill:#34495e,color:#fff
+```
+
+This case study follows the **PICERL framework**  the industry-standard incident response methodology. Each stage in this documentation corresponds to one phase above.
+
+---
+
 ## Triage Approach
 
 Rather than relying on visual inspection of Task Manager, the investigation pivoted to PowerShell-based enumeration for more granular data.
