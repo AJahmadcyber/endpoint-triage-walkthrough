@@ -1,0 +1,1068 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endpoint Triage Walkthrough | SOC Analyst Case Study</title>
+    <meta name="description" content="A real-world PUP incident response case study following the PICERL framework with PowerShell triage scripts and MITRE ATT&CK mapping.">
+    <link rel="icon" type="image/png" href="assets/banner.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e1a;
+            --bg-darker: #050810;
+            --bg-card: #111827;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-glow: rgba(59, 130, 246, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Matrix Rain Background */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        /* Cursor Glow Effect */
+        .cursor-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 5%;
+            background: rgba(10, 14, 26, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-logo::before {
+            content: ">";
+            color: var(--accent-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-cyan);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 100px 5% 50px;
+            z-index: 2;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-bottom: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            animation: fadeInDown 1s ease;
+        }
+
+        .hero-badge::before {
+            content: "";
+            color: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        h1.hero-title {
+            font-size: clamp(2.5rem, 7vw, 6rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 50px;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        .hero-tag {
+            padding: 8px 20px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            transition: all 0.3s;
+        }
+
+        .hero-tag:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.8s both;
+        }
+
+        .btn {
+            padding: 16px 35px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-cyan);
+            transform: translateY(-3px);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section Styling */
+        section {
+            padding: 100px 5%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 35px 25px;
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.03), transparent);
+        }
+
+        .demo-wrapper {
+            background: var(--bg-card);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-wrapper::before {
+            content: "  ";
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            color: #555;
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+        }
+
+        .demo-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 35px 30px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple));
+            transform: scaleY(0);
+            transition: transform 0.4s;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .feature-card:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-cyan);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* MITRE Section */
+        .mitre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .mitre-card {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .mitre-card:hover {
+            border-color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .mitre-id {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-red);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .mitre-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .mitre-tactic {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple));
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .timeline-content {
+            background: var(--bg-card);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            width: 45%;
+            transition: all 0.3s;
+        }
+
+        .timeline-content:hover {
+            border-color: var(--accent-cyan);
+            transform: scale(1.02);
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-right: 55%;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: 55%;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px var(--accent-cyan);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-phase {
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .timeline-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Tech Stack */
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .tech-badge {
+            padding: 12px 25px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .tech-badge:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Author Section */
+        .author-section {
+            text-align: center;
+            background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+        }
+
+        .author-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .author-name {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .author-title {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-cyan);
+            transform: translateY(-3px);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 5%;
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Reveal on scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .timeline::before {
+                left: 20px;
+            }
+            .timeline-content {
+                width: calc(100% - 60px);
+                margin-left: 50px !important;
+                margin-right: 0 !important;
+                text-align: left !important;
+            }
+            .timeline-dot {
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">endpoint-triage.exe</div>
+            <ul class="nav-links">
+                <li><a href="#stats">Impact</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#mitre">MITRE</a></li>
+                <li><a href="#author">Author</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">CASE STUDY  PRODUCTION READY</div>
+            <h1 class="hero-title">Endpoint Triage<br>Walkthrough</h1>
+            <p class="hero-subtitle">A real-world PUP incident response case study following the PICERL framework, with PowerShell triage automation, Sigma detection rules, and complete MITRE ATT&CK mapping.</p>
+            <div class="hero-tags">
+                <div class="hero-tag">PowerShell</div>
+                <div class="hero-tag">MITRE ATT&CK</div>
+                <div class="hero-tag">PICERL Framework</div>
+                <div class="hero-tag">Sigma Rules</div>
+                <div class="hero-tag">Threat Hunting</div>
+            </div>
+            <div class="cta-buttons">
+                <a href="https://github.com/AJahmadcyber/endpoint-triage-walkthrough" class="btn btn-primary">
+                    View on GitHub 
+                </a>
+                <a href="#demo" class="btn btn-secondary">
+                    Watch Demo
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Stats -->
+    <section id="stats">
+        <div class="section-container">
+            <h2 class="section-title reveal">Impact Metrics</h2>
+            <p class="section-subtitle reveal">Quantifiable results from a real endpoint investigation</p>
+            <div class="stats-grid">
+                <div class="stat-card reveal">
+                    <div class="stat-icon"></div>
+                    <div class="stat-number" data-target="99.9">0</div>
+                    <div class="stat-label">% CPU Reduction</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-icon"></div>
+                    <div class="stat-number" data-target="23">0</div>
+                    <div class="stat-label">C Temperature Drop</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-icon"></div>
+                    <div class="stat-number" data-target="8">0</div>
+                    <div class="stat-label">Services Removed</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-icon"></div>
+                    <div class="stat-number" data-target="4">0</div>
+                    <div class="stat-label">MITRE Techniques</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo-section">
+        <div class="section-container">
+            <h2 class="section-title reveal">Live Demo</h2>
+            <p class="section-subtitle reveal">Real-time endpoint triage in action</p>
+            <div class="demo-wrapper reveal">
+                <img src="assets/demo.gif" alt="Endpoint Triage Demo" class="demo-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+        <div class="section-container">
+            <h2 class="section-title reveal">What's Inside</h2>
+            <p class="section-subtitle reveal">Everything you need for endpoint investigation training</p>
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">PICERL Documentation</h3>
+                    <p class="feature-desc">5 detailed phase documents covering Identification, Containment, Eradication, Recovery, and Lessons Learned.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">PowerShell Scripts</h3>
+                    <p class="feature-desc">Production-ready triage automation with CPU time ratio analysis and multi-layer persistence audit.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">Sigma Detection Rules</h3>
+                    <p class="feature-desc">SIEM-ready detection content mapped to specific MITRE ATT&CK techniques observed in the case.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">Visual Diagrams</h3>
+                    <p class="feature-desc">Interactive Mermaid diagrams visualizing the PICERL flow, service architecture, and attack chain.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">Threat Hunting</h3>
+                    <p class="feature-desc">CPU time accumulator analysis and process tree mapping techniques for outlier detection.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"></div>
+                    <h3 class="feature-title">MITRE Mapping</h3>
+                    <p class="feature-desc">Complete attack chain visualization with technique correlation to real-world threat actors.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section>
+        <div class="section-container">
+            <h2 class="section-title reveal">Investigation Timeline</h2>
+            <p class="section-subtitle reveal">Following the PICERL framework step by step</p>
+            <div class="timeline">
+                <div class="timeline-item reveal">
+                    <div class="timeline-content">
+                        <div class="timeline-phase">PHASE 1</div>
+                        <div class="timeline-title">Identification</div>
+                        <div class="timeline-desc">Discovered CPU outlier consuming 44,392 seconds  10% of total uptime CPU. Used PowerShell-based process enumeration.</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-content">
+                        <div class="timeline-phase">PHASE 2</div>
+                        <div class="timeline-title">Investigation</div>
+                        <div class="timeline-desc">Mapped 8-service ReasonLabs suite. Identified DNS interception, EDR module, and Windows Security Center manipulation.</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-content">
+                        <div class="timeline-phase">PHASE 3</div>
+                        <div class="timeline-title">Eradication</div>
+                        <div class="timeline-desc">Executed official uninstaller, verified registry cleanup, reset DNS configuration, re-enabled Windows Defender.</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-content">
+                        <div class="timeline-phase">PHASE 4</div>
+                        <div class="timeline-title">MITRE Mapping</div>
+                        <div class="timeline-desc">Mapped 4 confirmed ATT&CK techniques: T1543.003, T1547.001, T1071.004, T1562.001 with detection guidance.</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-content">
+                        <div class="timeline-phase">PHASE 5</div>
+                        <div class="timeline-title">Detection Engineering</div>
+                        <div class="timeline-desc">Developed Sigma rules for SIEM deployment. Created PowerShell hunt scripts and KQL queries for blue teams.</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MITRE Section -->
+    <section id="mitre">
+        <div class="section-container">
+            <h2 class="section-title reveal">MITRE ATT&CK Coverage</h2>
+            <p class="section-subtitle reveal">Techniques observed and documented in this case</p>
+            <div class="mitre-grid">
+                <div class="mitre-card reveal">
+                    <div class="mitre-id">T1543.003</div>
+                    <div class="mitre-name">Create or Modify System Process</div>
+                    <div class="mitre-tactic">TA0003  Persistence</div>
+                </div>
+                <div class="mitre-card reveal">
+                    <div class="mitre-id">T1547.001</div>
+                    <div class="mitre-name">Registry Run Keys / Startup Folder</div>
+                    <div class="mitre-tactic">TA0003  Persistence</div>
+                </div>
+                <div class="mitre-card reveal">
+                    <div class="mitre-id">T1071.004</div>
+                    <div class="mitre-name">Application Layer Protocol: DNS</div>
+                    <div class="mitre-tactic">TA0011  Command & Control</div>
+                </div>
+                <div class="mitre-card reveal">
+                    <div class="mitre-id">T1562.001</div>
+                    <div class="mitre-name">Impair Defenses: Disable Tools</div>
+                    <div class="mitre-tactic">TA0005  Defense Evasion</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section>
+        <div class="section-container">
+            <h2 class="section-title reveal">Tech Stack</h2>
+            <p class="section-subtitle reveal">Tools and frameworks used</p>
+            <div class="tech-grid">
+                <div class="tech-badge reveal">PowerShell 5.1+</div>
+                <div class="tech-badge reveal">Windows 11</div>
+                <div class="tech-badge reveal">MITRE ATT&CK</div>
+                <div class="tech-badge reveal">Sigma Rules</div>
+                <div class="tech-badge reveal">Sysmon</div>
+                <div class="tech-badge reveal">Windows Defender</div>
+                <div class="tech-badge reveal">WMI</div>
+                <div class="tech-badge reveal">Registry Forensics</div>
+                <div class="tech-badge reveal">Mermaid Diagrams</div>
+                <div class="tech-badge reveal">PICERL Framework</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Author Section -->
+    <section id="author" class="author-section">
+        <div class="section-container">
+            <h2 class="section-title reveal">About the Author</h2>
+            <div class="author-card reveal">
+                <div class="author-name">Ahmad Abuzarqa</div>
+                <div class="author-title">SOC Analyst Trainee  Detection Engineer  Jordan </div>
+                <div class="social-links">
+                    <a href="https://github.com/AJahmadcyber" class="social-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 17.07 3.633 16.7 3.633 16.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="mailto:ahmad.j.abuzarqa@gmail.com" class="social-link">
+                         Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p> 2026 Ahmad Abuzarqa  Made with  for the Blue Team Community</p>
+        <p style="margin-top: 10px;">MIT License  Built for educational purposes</p>
+    </footer>
+
+    <script>
+        // Cursor Glow Effect
+        const cursorGlow = document.getElementById("cursor-glow");
+        document.addEventListener("mousemove", (e) => {
+            cursorGlow.style.left = e.clientX + "px";
+            cursorGlow.style.top = e.clientY + "px";
+        });
+
+        // Matrix Rain
+        const canvas = document.getElementById("matrix-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = "01アイウエオカキクケコサシスセソタチツテト";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(10, 14, 26, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#06b6d4";
+            ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Counter Animation
+        function animateCounter(element) {
+            const target = parseFloat(element.getAttribute("data-target"));
+            const duration = 2000;
+            const steps = 60;
+            const increment = target / steps;
+            let current = 0;
+            const decimal = target % 1 !== 0;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = decimal ? target.toFixed(1) : target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = decimal ? current.toFixed(1) : Math.floor(current);
+                }
+            }, duration / steps);
+        }
+
+        // Scroll Reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("active");
+                    if (entry.target.classList.contains("stat-card")) {
+                        const number = entry.target.querySelector(".stat-number");
+                        if (number && !number.dataset.animated) {
+                            animateCounter(number);
+                            number.dataset.animated = "true";
+                        }
+                    }
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+        // Smooth Scroll
+        document.querySelectorAll("a[href^='#']").forEach(anchor => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute("href"));
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
