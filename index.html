@@ -1401,20 +1401,7 @@
             overflow: hidden;
         }
 
-        #neural-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            opacity: 0.6;
-        }
 
-        .author-section .section-container {
-            position: relative;
-            z-index: 2;
-        }
 
         .author-card {
             background: rgba(17, 24, 39, 0.85) !important;
@@ -1965,7 +1952,7 @@
 
     <!-- Author Section -->
     <section id="author" class="author-section">
-        <canvas id="neural-canvas"></canvas>
+        
         <div class="section-container">
             <h2 class="section-title reveal">About the Author</h2>
             <div class="author-floating reveal">
@@ -2037,105 +2024,6 @@
             }
         }
         setInterval(drawMatrix, 50);
-
-        // ============================================
-        // NEURAL NETWORK ANIMATION
-        // ============================================
-        const neuralCanvas = document.getElementById("neural-canvas");
-        const neuralCtx = neuralCanvas.getContext("2d");
-        
-        function resizeNeural() {
-            const section = document.getElementById("author");
-            neuralCanvas.width = section.offsetWidth;
-            neuralCanvas.height = section.offsetHeight;
-        }
-        resizeNeural();
-        window.addEventListener("resize", resizeNeural);
-
-        const nodes = [];
-        const nodeCount = 60;
-        
-        for (let i = 0; i < nodeCount; i++) {
-            nodes.push({
-                x: Math.random() * neuralCanvas.width,
-                y: Math.random() * neuralCanvas.height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                radius: Math.random() * 2 + 1,
-                pulse: Math.random() * Math.PI * 2
-            });
-        }
-
-        function drawNeural() {
-            neuralCtx.fillStyle = "rgba(10, 14, 26, 0.1)";
-            neuralCtx.fillRect(0, 0, neuralCanvas.width, neuralCanvas.height);
-
-            // Update and draw nodes
-            nodes.forEach((node, i) => {
-                node.x += node.vx;
-                node.y += node.vy;
-                node.pulse += 0.02;
-
-                // Bounce off edges
-                if (node.x < 0 || node.x > neuralCanvas.width) node.vx *= -1;
-                if (node.y < 0 || node.y > neuralCanvas.height) node.vy *= -1;
-
-                // Draw connections
-                nodes.forEach((other, j) => {
-                    if (i >= j) return;
-                    const dx = node.x - other.x;
-                    const dy = node.y - other.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < 150) {
-                        const opacity = (1 - dist / 150) * 0.3;
-                        const pulse = Math.sin(node.pulse + other.pulse) * 0.5 + 0.5;
-                        
-                        neuralCtx.strokeStyle = `rgba(6, 182, 212, ${opacity * pulse})`;
-                        neuralCtx.lineWidth = 1;
-                        neuralCtx.beginPath();
-                        neuralCtx.moveTo(node.x, node.y);
-                        neuralCtx.lineTo(other.x, other.y);
-                        neuralCtx.stroke();
-
-                        // Data packet traveling on connection
-                        if (Math.random() < 0.003) {
-                            const t = Math.random();
-                            const px = node.x + dx * -t;
-                            const py = node.y + dy * -t;
-                            neuralCtx.fillStyle = `rgba(139, 92, 246, ${opacity * 3})`;
-                            neuralCtx.beginPath();
-                            neuralCtx.arc(px, py, 2, 0, Math.PI * 2);
-                            neuralCtx.fill();
-                        }
-                    }
-                });
-
-                // Draw node with pulse
-                const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
-                
-                // Outer glow
-                const gradient = neuralCtx.createRadialGradient(
-                    node.x, node.y, 0,
-                    node.x, node.y, node.radius * 8 * pulseSize
-                );
-                gradient.addColorStop(0, "rgba(6, 182, 212, 0.6)");
-                gradient.addColorStop(1, "rgba(6, 182, 212, 0)");
-                neuralCtx.fillStyle = gradient;
-                neuralCtx.beginPath();
-                neuralCtx.arc(node.x, node.y, node.radius * 8 * pulseSize, 0, Math.PI * 2);
-                neuralCtx.fill();
-
-                // Core node
-                neuralCtx.fillStyle = `rgba(6, 182, 212, ${0.7 + pulseSize * 0.3})`;
-                neuralCtx.beginPath();
-                neuralCtx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
-                neuralCtx.fill();
-            });
-
-            requestAnimationFrame(drawNeural);
-        }
-        drawNeural();
         window.addEventListener("resize", () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
