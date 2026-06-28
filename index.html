@@ -1986,6 +1986,86 @@
         /* Adjust body for status bar */
         body { padding-bottom: 40px; }
 
+    
+        /* ========================================
+           KONAMI CODE NOTIFICATION
+        ======================================== */
+        #konami-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--accent-cyan);
+            padding: 40px 60px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 99999;
+            box-shadow: 
+                0 0 50px var(--accent-cyan),
+                0 0 100px var(--accent-purple),
+                inset 0 0 30px rgba(6, 182, 212, 0.2);
+            animation: konami-appear 0.5s ease, konami-glitch 0.3s infinite;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        @keyframes konami-appear {
+            from {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes konami-glitch {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-51%, -49%); }
+            50% { transform: translate(-49%, -51%); }
+            75% { transform: translate(-50.5%, -50.5%); }
+        }
+
+        .konami-title {
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            text-shadow: 
+                0 0 20px var(--accent-cyan),
+                0 0 40px var(--accent-purple);
+            letter-spacing: 5px;
+            margin-bottom: 15px;
+            animation: konami-pulse 1s ease infinite;
+        }
+
+        @keyframes konami-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .konami-subtitle {
+            font-size: 1rem;
+            color: var(--accent-green);
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .konami-code {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .konami-text {
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+            letter-spacing: 8px;
+            text-shadow: 0 0 15px var(--accent-purple);
+        }
+
     </style>
 </head>
 <body>
@@ -2489,27 +2569,72 @@
         setInterval(updateLatency, 2000);
 
         // ============================================
-        // KONAMI CODE EASTER EGG
+        // KONAMI CODE EASTER EGG - ENHANCED
         // ============================================
-        const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
-        let konamiIndex = 0;
+        const konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyB", "KeyA"];
+        let konamiProgress = 0;
 
         document.addEventListener("keydown", (e) => {
-            if (e.key === konami[konamiIndex]) {
-                konamiIndex++;
-                if (konamiIndex === konami.length) {
-                    document.body.style.filter = "hue-rotate(180deg) invert(0.1)";
-                    addTerminalLine("[!] KONAMI CODE ACTIVATED", "term-warn");
-                    addTerminalLine("[!] SECRET MODE ENABLED", "term-warn");
-                    setTimeout(() => {
-                        document.body.style.filter = "none";
-                    }, 5000);
-                    konamiIndex = 0;
+            const key = e.code || e.key;
+            const expectedKey = konamiCode[konamiProgress];
+            
+            // Match either e.code (KeyB) or e.key (b/B)
+            const isMatch = key === expectedKey || 
+                           e.key.toLowerCase() === expectedKey.replace("Key", "").toLowerCase() ||
+                           key === expectedKey.replace("Key", "");
+            
+            if (isMatch) {
+                konamiProgress++;
+                console.log(`Konami progress: ${konamiProgress}/${konamiCode.length}`);
+                
+                if (konamiProgress === konamiCode.length) {
+                    activateSecretMode();
+                    konamiProgress = 0;
                 }
             } else {
-                konamiIndex = 0;
+                konamiProgress = 0;
             }
         });
+
+        function activateSecretMode() {
+            // Create notification overlay
+            const notification = document.createElement("div");
+            notification.id = "konami-notification";
+            notification.innerHTML = `
+                <div class="konami-content">
+                    <div class="konami-title"> ACCESS GRANTED </div>
+                    <div class="konami-subtitle">SECRET MODE ACTIVATED</div>
+                    <div class="konami-code">KONAMI CODE</div>
+                    <div class="konami-text">BA</div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            // Apply visual effects
+            document.body.style.transition = "filter 0.5s ease";
+            document.body.style.filter = "hue-rotate(180deg) invert(0.1) saturate(1.5)";
+            
+            // Terminal messages
+            if (typeof addTerminalLine === "function") {
+                addTerminalLine("[!] KONAMI CODE DETECTED", "term-warn");
+                addTerminalLine("[!] SECRET MODE: ACTIVE", "term-warn");
+                addTerminalLine("[!] ACCESS LEVEL: ELITE", "term-success");
+                addTerminalLine("[!] Welcome, hacker.", "term-info");
+            }
+
+            // Remove after 6 seconds
+            setTimeout(() => {
+                document.body.style.filter = "none";
+                notification.style.opacity = "0";
+                setTimeout(() => notification.remove(), 500);
+            }, 6000);
+        }
+
+        // Show hint after 30 seconds (one-time)
+        setTimeout(() => {
+            console.log("%c HINT: Try the Konami Code BA", 
+                "color: #06b6d4; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;");
+        }, 30000);
     </script>
 </body>
 </html>
