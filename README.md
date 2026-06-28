@@ -15,6 +15,18 @@
 
 ---
 
+##  Live Demo
+
+<div align="center">
+
+![Endpoint Triage in Action](./assets/demo.gif)
+
+*Real-time endpoint triage using `check-system.ps1`  identifying CPU outliers and system anomalies in seconds*
+
+</div>
+
+---
+
 ##  Tools & Technologies
 
 <div align="center">
