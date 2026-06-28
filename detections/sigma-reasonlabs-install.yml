@@ -1,0 +1,44 @@
+﻿title: ReasonLabs PUP Service Installation Detected
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+status: experimental
+description: |
+    Detects the installation of ReasonLabs (RAV Endpoint Protection) services on Windows endpoints.
+    While ReasonLabs is a legitimate commercial product, it is frequently bundled with freeware
+    and exhibits behaviors aligned with MITRE ATT&CK T1543.003 (Create or Modify System Process).
+references:
+    - https://attack.mitre.org/techniques/T1543/003/
+    - https://github.com/AJahmadcyber/endpoint-triage-walkthrough
+author: Ahmad Abuzarqa (@AJahmadcyber)
+date: 2026/06/27
+tags:
+    - attack.persistence
+    - attack.privilege_escalation
+    - attack.t1543.003
+logsource:
+    product: windows
+    service: system
+detection:
+    selection_event:
+        EventID: 7045
+    selection_paths:
+        ImagePath|contains:
+            - '\ReasonLabs\'
+            - 'rsEngineSvc.exe'
+            - 'rsClientSvc.exe'
+            - 'rsEDRSvc.exe'
+            - 'rsDNSResolver.exe'
+            - 'rsDNSSvc.exe'
+            - 'rsVPNSvc.exe'
+            - 'rsWSC.exe'
+            - 'rsSyncSvc.exe'
+    condition: selection_event and selection_paths
+falsepositives:
+    - Intentional user installation of RAV Endpoint Protection
+    - Corporate deployment of ReasonLabs products as approved AV solution
+level: medium
+fields:
+    - ComputerName
+    - ServiceName
+    - ImagePath
+    - AccountName
+    - StartType
