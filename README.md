@@ -9,7 +9,8 @@
 [![Status](https://img.shields.io/badge/Status-Complete-success?style=flat-square)](https://github.com/AJahmadcyber/endpoint-triage-walkthrough)
 [![Framework](https://img.shields.io/badge/Framework-PICERL-blue?style=flat-square)](https://www.sans.org/cyber-security-courses/)
 [![MITRE](https://img.shields.io/badge/MITRE_ATT%26CK-T1543.003-red?style=flat-square)](https://attack.mitre.org/techniques/T1543/003/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)]
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Page-purple?style=flat-square&logo=githubpages)](https://ajahmadcyber.github.io/endpoint-triage-walkthrough/)(LICENSE)
 
 </div>
 
